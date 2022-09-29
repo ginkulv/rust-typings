@@ -1,5 +1,5 @@
 use eframe::{
-    egui::{Color32, Layout, TextEdit, Context, FontDefinitions},
+    egui::{Color32, Layout, TextEdit, Context, FontDefinitions, Ui, Key},
     emath::Align,
 };
 use std::process;
@@ -46,7 +46,15 @@ impl Typings {
         }
     }
 
-    pub fn render_words(&self, ui: &mut eframe::egui::Ui) {
+    pub fn render_header(&self, ui: &mut Ui) {
+        ui.vertical_centered(|ui| {
+            ui.heading("Typings");
+        });
+        ui.add_space(10.);
+    }
+
+
+    pub fn render_words(&self, ui: &mut Ui) {
         let mut current_width: f32 = 0.;
         let mut i: usize = 0;
         let screen_width = ui.max_rect().width() * 0.6;
@@ -72,18 +80,18 @@ impl Typings {
         });
     }
 
-    pub fn render_input(&mut self, ui: &mut eframe::egui::Ui) {
+    pub fn render_input(&mut self, ui: &mut Ui) {
         ui.with_layout(Layout::top_down(Align::Center), |ui| {
             ui.add_space(50.);
             let input = TextEdit::singleline(&mut self.value).lock_focus(true);
             let response = ui.add(input);
             response.request_focus();
 
-            if ui.input().key_pressed(eframe::egui::Key::Escape) {
+            if ui.input().key_pressed(Key::Escape) {
                 process::exit(0);
             }
 
-            if ui.input().key_pressed(eframe::egui::Key::Tab) {
+            if ui.input().key_pressed(Key::Tab) {
                 let iter = (0..20).map(|a| Word {
                     value: format!("title{}", a),
                     highlight: Highlight::NONE,
@@ -95,7 +103,7 @@ impl Typings {
                 return;
             }
 
-            if response.changed() && ui.input().key_pressed(eframe::egui::Key::Space) {
+            if response.changed() && ui.input().key_pressed(Key::Space) {
                 if self.cur_index > self.words.len() - 1 {
                     self.value = "".to_string();
                     return;
