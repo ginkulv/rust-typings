@@ -1,6 +1,6 @@
 use eframe::{
-    egui::{Color32, Layout, TextEdit, Context, FontDefinitions, Ui, Key, RichText, FontSelection, TextStyle},
-    emath::Align, epaint::FontId,
+    egui::{Color32, Layout, TextEdit, Context, FontDefinitions, Ui, Key, RichText, TextStyle},
+    emath::Align
 };
 use std::process;
 
@@ -60,14 +60,13 @@ impl Typings {
                     // Didn't really get it to align properly, we'll see
                     ui.add_space(50.);
                     while i != self.words.len() && current_width < screen_width {
-                        let value = format!("{}", &self.words[i].value);
                         let color = match self.words[i].highlight {
                             Highlight::NONE    => Color32::from_rgb(255, 255, 255),
                             Highlight::CORRECT => Color32::from_rgb(34, 139, 34),
                             Highlight::WRONG   => Color32::from_rgb(227, 11, 92),
                             Highlight::NEXT    => Color32::from_rgb(137, 207, 240),
                         };
-                        let value = RichText::from(value).size(FONT_SIZE);
+                        let value = RichText::from(&self.words[i].value).size(FONT_SIZE);
                         let label = ui.colored_label(color, value);
                         current_width += label.rect.width();
                         i += 1;
