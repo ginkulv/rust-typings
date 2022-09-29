@@ -1,8 +1,10 @@
 use eframe::{
-    egui::{Color32, Layout, TextEdit, Context, FontDefinitions, Ui, Key},
-    emath::Align,
+    egui::{Color32, Layout, TextEdit, Context, FontDefinitions, Ui, Key, RichText, FontSelection, TextStyle},
+    emath::Align, epaint::FontId,
 };
 use std::process;
+
+const FONT_SIZE: f32 = 20.;
 
 pub enum Highlight {
     CORRECT,
@@ -39,20 +41,14 @@ impl Typings {
             value: format!("title{}", a),
             highlight: Highlight::NONE,
         });
+        let mut words = Vec::from_iter(iter);
+        words[0].highlight = Highlight::NEXT;
         Self {
             value: "".to_owned(),
-            words: Vec::from_iter(iter),
+            words,
             cur_index: 0
         }
     }
-
-    pub fn render_header(&self, ui: &mut Ui) {
-        ui.vertical_centered(|ui| {
-            ui.heading("Typings");
-        });
-        ui.add_space(10.);
-    }
-
 
     pub fn render_words(&self, ui: &mut Ui) {
         let mut current_width: f32 = 0.;
@@ -61,6 +57,7 @@ impl Typings {
         ui.vertical_centered(|ui| {
             while i != self.words.len() {
                 ui.horizontal(|ui| {
+                    // Didn't really get it to align properly, we'll see
                     ui.add_space(50.);
                     while i != self.words.len() && current_width < screen_width {
                         let value = format!("{}", &self.words[i].value);
@@ -70,6 +67,7 @@ impl Typings {
                             Highlight::WRONG   => Color32::from_rgb(227, 11, 92),
                             Highlight::NEXT    => Color32::from_rgb(137, 207, 240),
                         };
+                        let value = RichText::from(value).size(FONT_SIZE);
                         let label = ui.colored_label(color, value);
                         current_width += label.rect.width();
                         i += 1;
@@ -83,8 +81,10 @@ impl Typings {
     pub fn render_input(&mut self, ui: &mut Ui) {
         ui.with_layout(Layout::top_down(Align::Center), |ui| {
             ui.add_space(50.);
-            let input = TextEdit::singleline(&mut self.value).lock_focus(true);
-            let response = ui.add(input);
+            let input = TextEdit::singleline(&mut self.value)
+                .lock_focus(true)
+                .font(TextStyle::Heading);
+            let response = ui.add_sized([200., 20.], input);
             response.request_focus();
 
             if ui.input().key_pressed(Key::Escape) {
