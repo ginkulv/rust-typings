@@ -40,8 +40,8 @@ fn setup_fonts(ctx: &Context) {
 fn load_words() -> Vec<Word> {
     let bytes = include_bytes!("../res/words_en.txt");
     let mut file = String::from_utf8_lossy(bytes);
-    let new_file = file.to_mut();
-    let words = new_file.as_str().split("\r\n").filter(|w| w.to_string() != "").map(|w| {
+    let file = file.to_mut();
+    let words = file.as_str().split("\r\n").filter(|w| w.to_string() != "").map(|w| {
         Word {
             value: w.to_string(),
             highlight: Highlight::NONE
