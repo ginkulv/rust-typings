@@ -14,9 +14,9 @@ impl App for Typings {
 
 fn main() {
     let mut win_options = NativeOptions::default();
-    win_options.initial_window_size = Some(Vec2::new(540., 200.));
+    win_options.initial_window_size = Some(Vec2::new(900., 250.));
     // I have no idea how to set position dynamically
-    win_options.initial_window_pos = Some(Pos2::new(700., 850.));
+    win_options.initial_window_pos = Some(Pos2::new(500., 800.));
     win_options.decorated = false;
     run_native (
         "Typings",

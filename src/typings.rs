@@ -6,7 +6,7 @@ use std::process;
 use rand::{seq::IteratorRandom, thread_rng};
 
 const FONT_SIZE: f32 = 20.;
-const SAMPLE_SIZE: usize = 20;
+const SAMPLE_SIZE: usize = 50;
 
 enum Highlight {
     CORRECT,
@@ -68,7 +68,7 @@ impl Typings {
         ui.add_space(20.);
         let mut current_width: f32 = 0.;
         let mut i: usize = 0;
-        let screen_width = ui.max_rect().width() * 0.6;
+        let screen_width = ui.max_rect().width() * 0.7;
         ui.vertical_centered(|ui| {
             while i != self.words.len() {
                 ui.horizontal(|ui| {
