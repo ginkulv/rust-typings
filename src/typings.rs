@@ -6,6 +6,7 @@ use std::process;
 use rand::{seq::IteratorRandom, thread_rng};
 
 const FONT_SIZE: f32 = 20.;
+const SAMPLE_SIZE: usize = 20;
 
 enum Highlight {
     CORRECT,
@@ -46,19 +47,18 @@ fn load_words() -> Vec<Word> {
         }
     });
     let mut rng = thread_rng();
-    words.choose_multiple(&mut rng, 10).into_iter().collect()
+    words.choose_multiple(&mut rng, SAMPLE_SIZE).into_iter().collect()
 }
 
 impl Typings {
-
-
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         setup_fonts(&cc.egui_ctx);
+        // TODO it would be more efficient to load words only once and just get a sample of it
         let mut words = load_words();
         words[0].highlight = Highlight::NEXT;
         Self {
             value: "".to_owned(),
-            words: load_words(),
+            words,
             cur_index: 0
         }
     }
@@ -92,8 +92,8 @@ impl Typings {
     }
 
     pub fn render_input(&mut self, ui: &mut Ui) {
-        ui.with_layout(Layout::top_down(Align::Center), |ui| {
-            ui.add_space(50.);
+        ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
+            ui.add_space(10.);
             let input = TextEdit::singleline(&mut self.value)
                 .lock_focus(true)
                 .font(TextStyle::Heading);
@@ -105,8 +105,10 @@ impl Typings {
             }
 
             if ui.input().key_pressed(Key::Tab) {
+                let mut words = load_words();
+                words[0].highlight = Highlight::NEXT;
                 self.value = "".to_owned();
-                self.words = load_words();
+                self.words = words;
                 self.cur_index = 0;
 
                 return;
