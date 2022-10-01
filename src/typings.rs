@@ -3,10 +3,11 @@ use eframe::{
     emath::Align
 };
 use std::process;
+use std::time::Instant;
 use rand::{seq::IteratorRandom, thread_rng};
 
 const FONT_SIZE: f32 = 20.;
-const SAMPLE_SIZE: usize = 50;
+const SAMPLE_SIZE: usize = 2;
 
 enum Highlight {
     CORRECT,
@@ -20,6 +21,8 @@ pub struct Typings {
     words: Vec<Word>,
     value: String,
     cur_index: usize,
+    words_typed: usize,
+    word_progress: usize,
 }
 
 struct Word {
@@ -60,7 +63,9 @@ impl Typings {
         Self {
             value: "".to_owned(),
             words,
-            cur_index: 0
+            cur_index: 0,
+            words_typed: 0,
+            word_progress: 0,
         }
     }
 
@@ -93,59 +98,74 @@ impl Typings {
         });
     }
 
+    pub fn render_labels(&mut self, ui: &mut Ui) {
+        ui.add_space(40.);
+        println!("we're here");
+        ui.label(format!("Words: {}", self.words_typed));
+    }
+
     pub fn render_input(&mut self, ui: &mut Ui) {
-        ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
-            ui.add_space(10.);
-            let input = TextEdit::singleline(&mut self.value)
-                .lock_focus(true)
-                .font(TextStyle::Heading);
-            let response = ui.add_sized([200., 20.], input);
-            response.request_focus();
+        ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
+            ui.with_layout(Layout::bottom_up(Align::Center), |ui| {
+                ui.add_space(38.);
+                let input = TextEdit::singleline(&mut self.value)
+                    .lock_focus(true)
+                    .font(TextStyle::Heading);
+                let response = ui.add_sized([200., 20.], input);
+                response.request_focus();
 
-            if ui.input().key_pressed(Key::Escape) {
-                process::exit(0);
-            }
+                if ui.input().key_pressed(Key::Escape) {
+                    process::exit(0);
+                }
 
-            if ui.input().key_pressed(Key::Tab) {
-                let mut words = load_words();
-                words[0].highlight = Highlight::NEXT;
-                self.value = "".to_owned();
-                self.words = words;
-                self.cur_index = 0;
-
-                return;
-            }
-
-            if response.changed() && ui.input().key_pressed(Key::Space) {
-                if self.cur_index > self.words.len() - 1 {
-                    self.value = "".to_string();
+                if ui.input().key_pressed(Key::Tab) {
+                    let mut words = load_words();
+                    words[0].highlight = Highlight::NEXT;
+                    self.value = "".to_owned();
+                    self.words = words;
+                    self.cur_index = 0;
+                    self.words_typed = 0;
+                    self.word_progress = 0;
                     return;
                 }
-                let inp_value = &self.value[0..self.value.len() - 1];
-                if inp_value == self.words[self.cur_index].value {
-                    self.words[self.cur_index].highlight = Highlight::CORRECT;
-                } else {
-                    self.words[self.cur_index].highlight = Highlight::WRONG;
+
+                if response.changed() && ui.input().key_pressed(Key::Space) {
+                    if self.cur_index > self.words.len() - 1 {
+                        self.value = "".to_string();
+                        return;
+                    }
+                    let inp_value = &self.value[0..self.value.len() - 1];
+                    if inp_value == self.words[self.cur_index].value {
+                        self.words[self.cur_index].highlight = Highlight::CORRECT;
+                    } else {
+                        self.words[self.cur_index].highlight = Highlight::WRONG;
+                    }
+
+                    self.word_progress += self.words[self.cur_index].value.len();
+                    self.words_typed += self.word_progress / 5;
+                    self.word_progress = self.word_progress - (self.word_progress / 5);
+                    self.words_typed += 1;
+                    self.word_progress = 0;
+                    self.value = "".to_string();
+                    self.cur_index += 1;
+
+                    if self.cur_index < self.words.len() {
+                        self.words[self.cur_index].highlight = Highlight::NEXT;
+                    }
+
+                    return;
                 }
 
-                self.value = "".to_string();
-                self.cur_index += 1;
+                if response.changed() && self.cur_index < self.words.len() {
+                    if self.words[self.cur_index].value.starts_with(&self.value) {
+                        self.words[self.cur_index].highlight = Highlight::NEXT;
+                    } else {
+                        self.words[self.cur_index].highlight = Highlight::TYPO;
+                    }
 
-                if self.cur_index < self.words.len() {
-                    self.words[self.cur_index].highlight = Highlight::NEXT;
                 }
 
-                return;
-            }
-
-            if response.changed() {
-                if self.words[self.cur_index].value.starts_with(&self.value) {
-                    self.words[self.cur_index].highlight = Highlight::NEXT;
-                } else {
-                    self.words[self.cur_index].highlight = Highlight::TYPO;
-                }
-            }
-
+            });
         });
     }
 }
