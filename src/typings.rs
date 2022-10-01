@@ -13,6 +13,7 @@ enum Highlight {
     WRONG,
     NONE,
     NEXT,
+    TYPO,
 }
 
 pub struct Typings {
@@ -79,6 +80,7 @@ impl Typings {
                             Highlight::CORRECT => Color32::from_rgb(34, 139, 34),
                             Highlight::WRONG   => Color32::from_rgb(227, 11, 92),
                             Highlight::NEXT    => Color32::from_rgb(137, 207, 240),
+                            Highlight::TYPO    => Color32::from_rgb(116, 40, 2),
                         };
                         let value = RichText::from(&self.words[i].value).size(FONT_SIZE);
                         let label = ui.colored_label(color, value);
@@ -134,6 +136,14 @@ impl Typings {
                 }
 
                 return;
+            }
+
+            if response.changed() {
+                if self.words[self.cur_index].value.starts_with(&self.value) {
+                    self.words[self.cur_index].highlight = Highlight::NEXT;
+                } else {
+                    self.words[self.cur_index].highlight = Highlight::TYPO;
+                }
             }
 
         });
