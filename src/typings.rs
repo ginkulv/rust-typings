@@ -3,10 +3,11 @@ use eframe::{
     emath::Align
 };
 use std::process;
+use rand::{seq::IteratorRandom, thread_rng};
 
 const FONT_SIZE: f32 = 20.;
 
-pub enum Highlight {
+enum Highlight {
     CORRECT,
     WRONG,
     NONE,
@@ -19,7 +20,7 @@ pub struct Typings {
     cur_index: usize,
 }
 
-pub struct Word {
+struct Word {
     value: String,
     highlight: Highlight,
 }
@@ -34,23 +35,36 @@ fn setup_fonts(ctx: &Context) {
     ctx.set_fonts(fonts);
 }
 
+fn load_words() -> Vec<Word> {
+    let bytes = include_bytes!("../res/words_en.txt");
+    let mut file = String::from_utf8_lossy(bytes);
+    let new_file = file.to_mut();
+    let words = new_file.as_str().split("\r\n").filter(|w| w.to_string() != "").map(|w| {
+        Word {
+            value: w.to_string(),
+            highlight: Highlight::NONE
+        }
+    });
+    let mut rng = thread_rng();
+    words.choose_multiple(&mut rng, 10).into_iter().collect()
+}
+
 impl Typings {
+
+
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         setup_fonts(&cc.egui_ctx);
-        let iter = (0..20).map(|a| Word {
-            value: format!("title{}", a),
-            highlight: Highlight::NONE,
-        });
-        let mut words = Vec::from_iter(iter);
+        let mut words = load_words();
         words[0].highlight = Highlight::NEXT;
         Self {
             value: "".to_owned(),
-            words,
+            words: load_words(),
             cur_index: 0
         }
     }
 
     pub fn render_words(&self, ui: &mut Ui) {
+        ui.add_space(20.);
         let mut current_width: f32 = 0.;
         let mut i: usize = 0;
         let screen_width = ui.max_rect().width() * 0.6;
@@ -91,12 +105,8 @@ impl Typings {
             }
 
             if ui.input().key_pressed(Key::Tab) {
-                let iter = (0..20).map(|a| Word {
-                    value: format!("title{}", a),
-                    highlight: Highlight::NONE,
-                });
                 self.value = "".to_owned();
-                self.words = Vec::from_iter(iter);
+                self.words = load_words();
                 self.cur_index = 0;
 
                 return;
