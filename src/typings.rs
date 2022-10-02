@@ -7,7 +7,7 @@ use std::time::Instant;
 use rand::{seq::IteratorRandom, thread_rng};
 
 const FONT_SIZE: f32 = 20.;
-const SAMPLE_SIZE: usize = 2;
+const SAMPLE_SIZE: usize = 20;
 
 enum Highlight {
     CORRECT,
@@ -21,8 +21,10 @@ pub struct Typings {
     words: Vec<Word>,
     value: String,
     cur_index: usize,
-    words_typed: usize,
-    word_progress: usize,
+    correct_characters: usize,
+    started: bool,
+    start_time: Instant,
+    wpm: usize,
 }
 
 struct Word {
@@ -64,8 +66,10 @@ impl Typings {
             value: "".to_owned(),
             words,
             cur_index: 0,
-            words_typed: 0,
-            word_progress: 0,
+            correct_characters: 0,
+            started: false,
+            start_time: Instant::now(),
+            wpm: 0,
         }
     }
 
@@ -100,8 +104,8 @@ impl Typings {
 
     pub fn render_labels(&mut self, ui: &mut Ui) {
         ui.add_space(40.);
-        println!("we're here");
-        ui.label(format!("Words: {}", self.words_typed));
+        ui.label(format!("Words: {}", self.correct_characters / 5));
+        ui.label(format!("WPM: {}", self.wpm));
     }
 
     pub fn render_input(&mut self, ui: &mut Ui) {
@@ -124,16 +128,17 @@ impl Typings {
                     self.value = "".to_owned();
                     self.words = words;
                     self.cur_index = 0;
-                    self.words_typed = 0;
-                    self.word_progress = 0;
+                    self.correct_characters = 0;
+                    self.started = false;
                     return;
                 }
 
                 if response.changed() && ui.input().key_pressed(Key::Space) {
-                    if self.cur_index > self.words.len() - 1 {
+                    if !self.started {
                         self.value = "".to_string();
                         return;
                     }
+
                     let inp_value = &self.value[0..self.value.len() - 1];
                     if inp_value == self.words[self.cur_index].value {
                         self.words[self.cur_index].highlight = Highlight::CORRECT;
@@ -141,22 +146,29 @@ impl Typings {
                         self.words[self.cur_index].highlight = Highlight::WRONG;
                     }
 
-                    self.word_progress += self.words[self.cur_index].value.len();
-                    self.words_typed += self.word_progress / 5;
-                    self.word_progress = self.word_progress - (self.word_progress / 5);
-                    self.words_typed += 1;
-                    self.word_progress = 0;
+                    self.correct_characters += self.words[self.cur_index].value.len();
                     self.value = "".to_string();
                     self.cur_index += 1;
 
+                    let elapsed_secs = self.start_time.elapsed().as_secs_f64() / 60.;
+                    let words = (self.correct_characters / 5) as f64;
+                    self.wpm = (words / elapsed_secs) as usize;
+
                     if self.cur_index < self.words.len() {
                         self.words[self.cur_index].highlight = Highlight::NEXT;
+                    } else {
+                        self.started = false;
                     }
 
                     return;
                 }
 
                 if response.changed() && self.cur_index < self.words.len() {
+                    if !self.started {
+                        self.started = true;
+                        self.start_time = Instant::now();
+                    }
+
                     if self.words[self.cur_index].value.starts_with(&self.value) {
                         self.words[self.cur_index].highlight = Highlight::NEXT;
                     } else {
