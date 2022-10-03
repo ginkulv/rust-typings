@@ -22,6 +22,7 @@ pub struct Typings {
     value: String,
     cur_index: usize,
     correct_characters: usize,
+    correct_words: usize,
     started: bool,
     start_time: Instant,
     wpm: usize,
@@ -67,6 +68,7 @@ impl Typings {
             words,
             cur_index: 0,
             correct_characters: 0,
+            correct_words: 0,
             started: false,
             start_time: Instant::now(),
             wpm: 0,
@@ -106,6 +108,8 @@ impl Typings {
         ui.add_space(40.);
         ui.label(format!("Words: {}", self.correct_characters / 5));
         ui.label(format!("WPM: {}", self.wpm));
+        let cur_length = if self.cur_index == 0 { 1. } else { self.cur_index as f64 };
+        ui.label(format!("Acc: {:.0}", 100. * self.correct_words as f64 / cur_length ));
     }
 
     pub fn render_input(&mut self, ui: &mut Ui) {
@@ -130,6 +134,7 @@ impl Typings {
                     self.cur_index = 0;
                     self.correct_characters = 0;
                     self.started = false;
+                    self.correct_words = 0;
                     return;
                 }
 
@@ -142,6 +147,7 @@ impl Typings {
                     let inp_value = &self.value[0..self.value.len() - 1];
                     if inp_value == self.words[self.cur_index].value {
                         self.words[self.cur_index].highlight = Highlight::CORRECT;
+                        self.correct_words += 1;
                     } else {
                         self.words[self.cur_index].highlight = Highlight::WRONG;
                     }
