@@ -110,7 +110,7 @@ impl Typings {
             ui.label(format!("Words: {}", self.correct_characters / 5));
             ui.label(format!("WPM: {}", self.wpm));
             let cur_length = if self.cur_index == 0 { 1. } else { self.cur_index as f64 };
-            ui.label(format!("Acc: {:.0}", 100. * self.correct_words as f64 / cur_length ));
+            ui.label(format!("Acc: {:.0}%", 100. * self.correct_words as f64 / cur_length ));
         });
     }
 
