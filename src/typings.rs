@@ -7,7 +7,7 @@ use std::time::Instant;
 use rand::{seq::IteratorRandom, thread_rng};
 
 const FONT_SIZE: f32 = 20.;
-const SAMPLE_SIZE: usize = 20;
+const SAMPLE_SIZE: usize = 40;
 
 enum Highlight {
     CORRECT,
@@ -105,11 +105,13 @@ impl Typings {
     }
 
     pub fn render_labels(&mut self, ui: &mut Ui) {
-        ui.add_space(40.);
-        ui.label(format!("Words: {}", self.correct_characters / 5));
-        ui.label(format!("WPM: {}", self.wpm));
-        let cur_length = if self.cur_index == 0 { 1. } else { self.cur_index as f64 };
-        ui.label(format!("Acc: {:.0}", 100. * self.correct_words as f64 / cur_length ));
+        ui.with_layout(Layout::bottom_up(Align::Min), |ui| {
+            ui.add_space(40.);
+            ui.label(format!("Words: {}", self.correct_characters / 5));
+            ui.label(format!("WPM: {}", self.wpm));
+            let cur_length = if self.cur_index == 0 { 1. } else { self.cur_index as f64 };
+            ui.label(format!("Acc: {:.0}", 100. * self.correct_words as f64 / cur_length ));
+        });
     }
 
     pub fn render_input(&mut self, ui: &mut Ui) {
